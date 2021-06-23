@@ -102,27 +102,27 @@ namespace DeservingCompanions.Patches
 
             if (MBRandom.RandomFloatRanged(0, 1) < Settings.Instance.LeadershipProba)
             {
-                reward.Add(DefaultSkills.Leadership, (int)Math.Round(menLeadedF * issueDurationF * 5f));
+                reward.Add(DefaultSkills.Leadership, (int)Math.Round(menLeadedF * issueDurationF * 10f));
             }
 
             if (MBRandom.RandomFloatRanged(0, 1) < Settings.Instance.StewardProba)
             {
-                reward.Add(DefaultSkills.Steward, (int)Math.Round(menLeadedF * issueDurationF * 5f));
+                reward.Add(DefaultSkills.Steward, (int)Math.Round(menLeadedF * issueDurationF * 10f));
             }
 
             if (MBRandom.RandomFloatRanged(0, 1) < Settings.Instance.ScoutingProba)
             {
-                reward.Add(DefaultSkills.Scouting, (int)Math.Round(menLeadedF * issueDurationF * 5f));
+                reward.Add(DefaultSkills.Scouting, (int)Math.Round(menLeadedF * issueDurationF * 10f));
             }
 
             if (MBRandom.RandomFloatRanged(0, 1) < Settings.Instance.MedicineProba)
             {
-                reward.Add(DefaultSkills.Medicine, (int)Math.Round(menLeadedF * issueDurationF * 5f));
+                reward.Add(DefaultSkills.Medicine, (int)Math.Round(menLeadedF * issueDurationF * 10f));
             }
 
             if (MBRandom.RandomFloatRanged(0, 1) < Settings.Instance.TacticsProba)
             {
-                reward.Add(DefaultSkills.Tactics, (int)Math.Round(menLeadedF * issueDurationF * 5f));
+                reward.Add(DefaultSkills.Tactics, (int)Math.Round(menLeadedF * issueDurationF * 10f));
             }
 
             return reward;
