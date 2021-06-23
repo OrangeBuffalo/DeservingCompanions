@@ -2,7 +2,7 @@
 <Module>
   <Name value="Deserving Companions" />
   <Id value="$modulename$" />
-  <Version value="v1.0.0" />
+  <Version value="v1.0.1" />
   <Official value="false" />
   <DefaultModule value="false" />
   <SingleplayerModule value="true" />

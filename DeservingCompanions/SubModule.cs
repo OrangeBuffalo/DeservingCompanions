@@ -13,7 +13,6 @@ namespace DeservingCompanions
             base.OnSubModuleLoad();
 
             var harmony = new Harmony("DeservingCompanions");
-            FileLog.Log("Adding patches...");
             harmony.PatchAll();
         }
 
