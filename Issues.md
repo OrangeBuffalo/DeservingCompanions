@@ -27,7 +27,7 @@ d = `IssueDifficultyMultiplier`
 | `NearbyBanditBase` | 20 | 10 | TAC 30 MELEE 50 | MELEE 1000 + 1250d |
 | `VillageNeedsTools` | 7 + 7d | 6 + 8d | TRD 150d | TRD 500 + 700d |
 
-## Implementation
+## Code analysis
 
 Deserving Companions relies on two methods to fetch required and rewarded skills: `GetAlternativeSolutionRequiredCompanionSkills()` and `CompanionSkillAndRewardXP`. The problem is some issues does not use those methods -- relying instead on alternative methods or hardcoded values...
 
@@ -45,3 +45,29 @@ In the end there is three types of issues:
 * issues that return a single dict that can be of type `ShoudHaveAll` or `ShouldHaveOneOfThem`. We have to check the `AlternativeSolutionEndConsequence()` method to know.
 * issues that does not implement `GetAlternativeSolutionRequiredCompanionSkills`, relying instead on another method or in hardcoded values.
 
+## Implementation
+
+| Issue | `GetAlternativeSolutionRequiredCompanionSkills()` |
+| ----- | -------- |
+| `ArtisanCantSellProductsAtFairPrice` | Return `ShouldHaveAll` (single skill) |
+| `ArtisanOverpricedGoods` | Return `ShouldHaveAll` (single skill) |
+| `CapturedByBountyHunter` | Update `ShouldHaveAll` & `ShouldHaveOneOfThem` |
+| `CaravanAmbush` | Update `ShouldHaveAll` & `ShouldHaveOneOfThem` |
+| `EscortMerchantCaravan` | Return `ShouldHaveAll` |
+| `ExtortionByDeserters` | Update `ShouldHaveAll` & `ShouldHaveOneOfThem` |
+| `GandLeaderNeedsRecruit` | `ShouldHaveOneOfThem` returned by `CompanionSkillRequirement` |
+| `GangLeaderNeedsWeapons` | Return `ShouldHaveAll` |
+| `HeadmanNeedsGrain` | Return `ShouldHaveAll` |
+| `HeadmanNeedsToDeliverAHerd` | Return `ShouldHaveAll` |
+| `HeadmanVillageNeedsDraughtAnimals` | Return `ShouldHaveAll` |
+| `LandlordNeedsAccessToVillageCommons` | No requirement |
+| `LandLordNeedsManualLaborers` | Return `ShouldHaveOneOfThem` |
+| `LandLordTheArtOfTheTrade` | Hardcoded in `CompanionSkillCondition` |
+| `LandlordTrainingForRetainers` | Update `ShouldHaveAll` & `ShouldHaveOneOfThem` |
+| `LesserNobleRevolt` | Return `ShouldHaveAll` |
+| `LordNeedsGarrisonTroops` | Return `ShouldHaveAll` |
+| `LordNeedsHorses` | Return `ShouldHaveAll` |
+| `MerchantArmyOfPoacher` | Return `ShouldHaveAll`. `GetAlternativeSolutionCompanionSkills()` returns `ShouldHaveOneOfThem` |
+| `MerchantNeedsHelpWithOutlaws` | Return `ShouldHaveOneOfThem` |
+| `NearbyBanditBase` | Update `ShouldHaveAll` & `ShouldHaveOneOfThem` |
+| `VillageNeedsTools` | Return `ShouldHaveAll` |
