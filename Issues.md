@@ -15,11 +15,33 @@ d = `IssueDifficultyMultiplier`
 | `HeadmanNeedsGrain` | 10 + 7d | 5 + 3d | TRD 150d | TRD 500 + 700d |
 | `HeadmanNeedsToDeliverAHerd` | 5 + 15d | 5 + 15d | RID 150d | RID 500 + 700d |
 | `HeadmanNeedsToDeliver` | 7 + 7d | 6 + 8d | TRD 150d | TRD 500 + 700d |
-| `LandlordNeedsAccessToVillageCommons` | 8 + 17d | 6 + 19d | | MELEE 700 + 900d |
+| `LandlordNeedsAccessToVillageCommons` | 8 + 17d | 6 + 19d | Nothing? | MELEE 700 + 900d |
 | `LandLordNeedsManualLaborers` | 8 + 17d | 6 + 19d | MELEE 150d | MELEE 500 + 700d |
-| `LandLordTheArtOfTheTrade`* | 15 | 3 + 2d | TRD 100d | TRD 900 + 800d |
-| `LandlordTrainingForRetainers` | 16 + 22d | 7 + 13d | TAC & LDR & MELEE 150d | |
+| `LandLordTheArtOfTheTrade` | 15 | 3 + 2d | TRD 100d | TRD 900 + 800d |
+| `LandlordTrainingForRetainers` | 16 + 22d | 7 + 13d | TAC & LDR & MELEE 150d | MELEE \| TAC 500 + 700d |
 | `LesserNobleRevolt` | 7 + 13d | 5 + 10d | LDR & SCT 150d | LDR \| SCT 800 + 1000d |
-| `LordNeedsGarrisonTroops` | | | | |
+| `LordNeedsGarrisonTroops` | 7 + 13d | 5 + 10d | LDR & SCT 150d | SCT \| LDR 800 + 900d |
+| `LordNeedsHorses` | 7 + 13d | 5 + 10d | TRD & RID 150d | TRD \| RID 500 + 700d |
+| `MerchantArmyOfPoacher` | 10 + 14d | 17 + 23d | TAC & MELEE 70 | MELEE 800 + 1000d |
+| `MerchantNeedsHelpWithOutlaws` | 5 + 10d | 7 + 10d | MELEE 150d | RID 600 + 800d |
+| `NearbyBanditBase` | 20 | 10 | TAC 30 MELEE 50 | MELEE 1000 + 1250d |
+| `VillageNeedsTools` | 7 + 7d | 6 + 8d | TRD 150d | TRD 500 + 700d |
 
-\* Get companion requirements with `CompanionSkillCondition`...
+## Implementation
+
+Deserving Companions relies on two methods to fetch required and rewarded skills: `GetAlternativeSolutionRequiredCompanionSkills()` and `CompanionSkillAndRewardXP`. The problem is some issues does not use those methods -- relying instead on alternative methods or hardcoded values...
+
+* `GangLeaderNeedsRecruits` : `GetAlternativeSolutionRequiredCompanionSkills()` is not implemented. Uses `CompanionSkillRequirement` instead.
+* `LandlordNeedsAccessToVillageCommons` : No `GetAlternativeSolutionRequiredCompanionSkills()`, because there isn't any skill requirement.
+* `LandlordNeedsManualLaborers` : Required skills returned by `GetAlternativeSolutionRequiredCompanionSkills()` are all `ShouldHaveOneOfThem`.
+* `LandLordTheArtOfTheTrade` : No `GetAlternativeSolutionRequiredCompanionSkills()`. Requirements are hardcoded in `CompanionSkillCondition()`.
+*  `MerchantArmyOfPoachers` : `ShouldHaveOneOfThem` skills are in `GetAlternativeSolutionCompanionSkills()`.
+* `MerchantNeedsHelpWithOutlaws` : required skills are `ShouldHaveOneOfThem`.
+
+There is an issue with `GetAlternativeSolutionCompanionSkills()`. Sometimes it returns a single dict which can be of type `ShouldHaveAll` or `ShouldHaveOneOfThem`. Sometimes it just updates `ShouldHaveAll` and `ShouldHaveOneOfThem` dictionary parameters.
+
+In the end there is three types of issues:
+* issues that updates `ShouldHaveAll` and `ShouldHaveOneOfThem` dictionnaries (seems to be the default implementation)
+* issues that return a single dict that can be of type `ShoudHaveAll` or `ShouldHaveOneOfThem`. We have to check the `AlternativeSolutionEndConsequence()` method to know.
+* issues that does not implement `GetAlternativeSolutionRequiredCompanionSkills`, relying instead on another method or in hardcoded values.
+
