@@ -11,10 +11,8 @@ using HarmonyLib;
 namespace DeservingCompanions.Patches
 {
 
-    // Harmony should not be needed in that case, as there is an OnIssueUpdated event we can listen to.
-    // However, some crucial fields are cleared from the IssueBase object before sending the event, such as
-    // AlternativeSolutionHero and AlternativeSolutionSentTroops.
-
+    // Skill requirements are checked using two dictionaries: shouldHaveAll and shouldHaveOneOfThem
+    // Both dictionaries are prefix-patched to adjust the skill values by a given factor.
     [HarmonyPatch(typeof(QuestHelper), "CheckAllCompanionsCondition")]
     class CheckAllCompanionsConditionPatch
     {
@@ -24,14 +22,14 @@ namespace DeservingCompanions.Patches
             {
                 foreach (KeyValuePair<SkillObject, int> requiredSkill in shouldHaveAll)
                 {
-                    shouldHaveAll[requiredSkill.Key] = (int)Math.Round(requiredSkill.Value / Settings.Instance.SkillRequirementsFactor);
+                    shouldHaveAll[requiredSkill.Key] = (int)Math.Round(requiredSkill.Value * Settings.Instance.SkillRequirementsFactor);
                 }
             }
             if (shouldHaveOneOfThem is not null)
             {
                 foreach (KeyValuePair<SkillObject, int> requiredSkill in shouldHaveOneOfThem)
                 {
-                    shouldHaveOneOfThem[requiredSkill.Key] = (int)Math.Round(requiredSkill.Value / Settings.Instance.SkillRequirementsFactor);
+                    shouldHaveOneOfThem[requiredSkill.Key] = (int)Math.Round(requiredSkill.Value * Settings.Instance.SkillRequirementsFactor);
                 }
             }
         }
