@@ -18,18 +18,20 @@ namespace DeservingCompanions.Patches
     {
         static void Prefix(TroopRoster troopRoster, ref TextObject explanation, ref Dictionary<SkillObject, int> shouldHaveAll, ref Dictionary<SkillObject, int> shouldHaveOneOfThem)
         {
-            if (shouldHaveAll is not null)
-            {
-                foreach (KeyValuePair<SkillObject, int> requiredSkill in shouldHaveAll)
+                if (shouldHaveAll is not null)
                 {
-                    shouldHaveAll[requiredSkill.Key] = (int)Math.Round(requiredSkill.Value * Settings.Instance.SkillRequirementsFactor);
+                    List<SkillObject> skills = new List<SkillObject>(shouldHaveAll.Keys);
+                    foreach (SkillObject skill in skills)
+                    {
+                        shouldHaveAll[skill] = (int)Math.Round(shouldHaveAll[skill] * Settings.Instance.SkillRequirementsFactor);
+                    }
                 }
-            }
             if (shouldHaveOneOfThem is not null)
             {
-                foreach (KeyValuePair<SkillObject, int> requiredSkill in shouldHaveOneOfThem)
+                List<SkillObject> skills = new List<SkillObject>(shouldHaveOneOfThem.Keys);
+                foreach (SkillObject skill in skills)
                 {
-                    shouldHaveOneOfThem[requiredSkill.Key] = (int)Math.Round(requiredSkill.Value * Settings.Instance.SkillRequirementsFactor);
+                    shouldHaveOneOfThem[skill] = (int)Math.Round(shouldHaveOneOfThem[skill] * Settings.Instance.SkillRequirementsFactor);
                 }
             }
         }
