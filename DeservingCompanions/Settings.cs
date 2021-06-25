@@ -15,6 +15,10 @@ namespace DeservingCompanions
         [SettingPropertyGroup("Deserving Companions")]
         public float XpGainsFactor { get; set; } = 1f;
 
+        [SettingPropertyFloatingInteger("Companion XP Requirements", 0f, 1f, "0%", Order = 0, RequireRestart = false, HintText = "Lower the companion skill requirements for all quests (Default=75%).")]
+        [SettingPropertyGroup("Deserving Companions")]
+        public float SkillRequirementsFactor { get; set; } = 0.75f;
+
         [SettingPropertyFloatingInteger("Leadership increase chance", 0f, 1f, "0%", Order = 0, RequireRestart = false, HintText = "Chance of gaining Leadership skill XP after leading men in a quest (Default=50%).")]
         [SettingPropertyGroup("Deserving Companions")]
         public float LeadershipProba { get; set; } = 0.5f;
