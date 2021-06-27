@@ -15,7 +15,7 @@ namespace DeservingCompanions
         [SettingPropertyGroup("Deserving Companions")]
         public float XpGainsFactor { get; set; } = 1f;
 
-        [SettingPropertyFloatingInteger("Companion XP Requirements", 0f, 1f, "0%", Order = 0, RequireRestart = false, HintText = "Lower the companion skill requirements for all quests (Default=75%).")]
+        [SettingPropertyFloatingInteger("Companion Skill Requirements", 0f, 1f, "0%", Order = 0, RequireRestart = false, HintText = "Lower the companion skill requirements for all quests (Default=75%).")]
         [SettingPropertyGroup("Deserving Companions")]
         public float SkillRequirementsFactor { get; set; } = 0.75f;
 
