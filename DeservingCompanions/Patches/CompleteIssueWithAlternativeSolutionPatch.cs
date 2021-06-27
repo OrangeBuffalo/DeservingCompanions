@@ -90,51 +90,69 @@ namespace DeservingCompanions.Patches
                 case "LandLordTrainingForRetainersIssue":
                 case "NearbyBanditBaseIssue":
                     // GetAlternativeSolutionRequiredCompanionSkills() uses shouldHaveAll and shouldHaveOneOfThem as out parameters
-                    MethodInfo GetRequiredSkills1 = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
-                    object[] parameters = new object[] { shouldHaveAll, shouldHaveOneOfThem };
-                    GetRequiredSkills1.Invoke(issue, parameters);
-                    shouldHaveAll = (Dictionary<SkillObject, int>)parameters[0];
-                    shouldHaveOneOfThem = (Dictionary<SkillObject, int>)parameters[1];
-                    break;
+                    {
+                        MethodInfo GetRequiredSkills = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
+                        object[] parameters = new object[] { shouldHaveAll, shouldHaveOneOfThem };
+                        GetRequiredSkills.Invoke(issue, parameters);
+                        shouldHaveAll = (Dictionary<SkillObject, int>)parameters[0];
+                        shouldHaveOneOfThem = (Dictionary<SkillObject, int>)parameters[1];
+                        break;
+                    }
                 case "ArtisanCantSellProductsAtFairPriceIssue":
                 case "ArtisanOverpricedGoodsIssue":
                 case "EscortMerchantCaravanIssue":
                 case "GangLeaderNeedsWeaponsIssue":
                 case "HeadmanNeedsToDeliverAHerdIssue":
-                case "HeadmanVillageNeedsDraughtAnimalsIssue":
                 case "LesserNobleRevoltIssue":
                 case "LordNeedsGarrisonTroopsIssue":
                 case "LordNeedsHorsesIssue":
                 case "VillageNeedsToolsIssue":
                     // GetAlternativeSolutionRequiredCompanionSkills() returns shouldHaveAll
-                    MethodInfo GetRequiredSkills2 = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
-                    shouldHaveAll = (Dictionary<SkillObject, int>)GetRequiredSkills2.Invoke(issue, null);
-                    break;
+                    {
+                        MethodInfo GetRequiredSkills = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
+                        shouldHaveAll = (Dictionary<SkillObject, int>)GetRequiredSkills.Invoke(issue, null);
+                        break;
+                    }
                 case "LandLordNeedsManualLaborersIssue":
                 case "MerchantNeedsHelpWithOutlawsIssue":
                     // GetAlternativeSolutionRequiredCompanionSkills() returns shouldHaveOneOfThem
-                    MethodInfo GetRequiredSkills3 = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
-                    shouldHaveOneOfThem = (Dictionary<SkillObject, int>)GetRequiredSkills3.Invoke(issue, null);
-                    break;
+                    {
+                        MethodInfo GetRequiredSkills = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
+                        shouldHaveOneOfThem = (Dictionary<SkillObject, int>)GetRequiredSkills.Invoke(issue, null);
+                        break;
+                    }
                 case "GandLeaderNeedsRecruitIssue":
                     // CompanionSkillRequirement returns shouldHaveOneOfThem
-                    MethodInfo GetRequiredSkills4 = issue.GetType().GetMethod("get_CompanionSkillRequirement", BindingFlags.Instance | BindingFlags.NonPublic);
-                    shouldHaveOneOfThem = (Dictionary<SkillObject, int>)GetRequiredSkills4.Invoke(issue, null);
-                    break;
+                    {
+                        MethodInfo GetRequiredSkills = issue.GetType().GetMethod("get_CompanionSkillRequirement", BindingFlags.Instance | BindingFlags.NonPublic);
+                        shouldHaveOneOfThem = (Dictionary<SkillObject, int>)GetRequiredSkills.Invoke(issue, null);
+                        break;
+                    }
                 case "LandLordTheArtOfTheTradeIssue":
                     // skill and value hardcoded in CompanionSkillCondition
-                    MethodInfo GetRequiredSkills5 = issue.GetType().GetMethod("get_CompanionRequiredSkillLevel", BindingFlags.Instance | BindingFlags.NonPublic);
-                    int requiredSkillLevel = (int)GetRequiredSkills5.Invoke(issue, null);
-                    shouldHaveAll.Add(DefaultSkills.Trade, requiredSkillLevel);
-                    break;
+                    {
+                        MethodInfo GetRequiredSkills = issue.GetType().GetMethod("get_CompanionRequiredSkillLevel", BindingFlags.Instance | BindingFlags.NonPublic);
+                        int requiredSkillLevel = (int)GetRequiredSkills.Invoke(issue, null);
+                        shouldHaveAll.Add(DefaultSkills.Trade, requiredSkillLevel);
+                        break;
+                    }
                 case "MerchantArmyOfPoacherIssue":
                     // GetAlternativeSolutionRequiredCompanionSkills() returns shouldHaveAll
                     // GetAlternativeSolutionCompanionSkills() returns shouldHaveOneOfThem
-                    MethodInfo GetRequiredSkills6 = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
-                    MethodInfo GetRequiredSkills7 = issue.GetType().GetMethod("GetAlternativeSolutionCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
-                    shouldHaveAll = (Dictionary<SkillObject, int>)GetRequiredSkills6.Invoke(issue, null);
-                    shouldHaveOneOfThem = (Dictionary<SkillObject, int>)GetRequiredSkills7.Invoke(issue, null);
-                    break;
+                    {
+                        MethodInfo GetRequiredSkills = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkill", BindingFlags.Instance | BindingFlags.NonPublic);
+                        shouldHaveAll = (Dictionary<SkillObject, int>)GetRequiredSkills.Invoke(issue, null);
+                        GetRequiredSkills = issue.GetType().GetMethod("GetAlternativeSolutionCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
+                        shouldHaveOneOfThem = (Dictionary<SkillObject, int>)GetRequiredSkills.Invoke(issue, null);
+                        break;
+                    }
+                case "HeadmanVillageNeedsDraughtAnimalsIssue":
+                    // GetAlternativeSolutionRequiredCompanionSkill() returns shouldHaveAll
+                    {
+                        MethodInfo GetRequiredSkills = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkill", BindingFlags.Instance | BindingFlags.NonPublic);
+                        shouldHaveAll = (Dictionary<SkillObject, int>)GetRequiredSkills.Invoke(issue, null);
+                        break;
+                    }
                 default:
                     // No requirement or unknown issue
                     break;
