@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 using TaleWorlds.Core;
 using TaleWorlds.CampaignSystem;
 
 using HarmonyLib;
 
-namespace DeservingCompanions.Patches
+namespace DeservingCompanions.Patchess
 {
 
     // Harmony should not be needed in that case, as there is an OnIssueUpdated event we can listen to.
@@ -15,32 +16,34 @@ namespace DeservingCompanions.Patches
     // AlternativeSolutionHero and AlternativeSolutionSentTroops.
 
     [HarmonyPatch(typeof(IssueBase), "CompleteIssueWithAlternativeSolution")]
-    class CompleteIssueWithAlternativeSolutionPatch
+    internal class CompleteIssueWithAlternativeSolutionPatch
     {
 
         // Prefix patch is required to read AlternativeSolutionHero and AlternativeSolutionSentTroops
         // Both fields are cleared by CompleteIssueWithAlternativeSolution.
-        static void Prefix(IssueBase __instance, out ValueTuple<Hero, int> __state)
+        private static void Prefix(IssueBase __instance, out ValueTuple<Hero, int> __state)
         {
             __state.Item1 = __instance.AlternativeSolutionHero;
             __state.Item2 = __instance.AlternativeSolutionSentTroops.TotalManCount - 1;
         }
 
-        static void Postfix(IssueBase __instance, ValueTuple<Hero, int> __state)
+        private static void Postfix(IssueBase __instance, ValueTuple<Hero, int> __state)
         {
             Hero companion = __state.Item1;
             int menLeaded = __state.Item2;
 
             if (companion is not null && companion.CompanionOf == Clan.PlayerClan && menLeaded > 0)
             {
+                SubModule.Instance.Log.LogInformation($"Distributing additional XP to {companion.Name} after return from {__instance.GetType().Name}...");
                 DistributeAdditionalXpRewards(__instance, companion, menLeaded);
             }
         }
 
-        static void DistributeAdditionalXpRewards(IssueBase issue, Hero companion, int menLeaded)
+        private static void DistributeAdditionalXpRewards(IssueBase issue, Hero companion, int menLeaded)
         {
             MethodInfo GetIssueDuration = typeof(IssueBase).GetMethod("get_AlternativeSolutionDurationInDays", BindingFlags.Instance | BindingFlags.NonPublic);
             int issueDuration = (int)GetIssueDuration.Invoke(issue, null);
+            SubModule.Instance.Log.LogInformation($"{menLeaded} mens leaded for {issueDuration} days.");
 
             var shouldHaveAll = new Dictionary<SkillObject, int>();
             var shouldHaveOneOfThem = new Dictionary<SkillObject, int>();
@@ -50,23 +53,19 @@ namespace DeservingCompanions.Patches
             MethodInfo GetCompanionReward = typeof(IssueBase).GetMethod("get_CompanionSkillAndRewardXP", BindingFlags.Instance | BindingFlags.NonPublic);
             ValueTuple<SkillObject, int> originalReward = (ValueTuple<SkillObject, int>)GetCompanionReward.Invoke(issue, null);
 
-            // Additional XP reward from required and optional skills
-            Dictionary<SkillObject, int> reward1 = XpRewardFromRequiredSkills(companion, originalReward, shouldHaveAll, shouldHaveOneOfThem, issueDuration);
-            if (reward1 is not null)
+            // Distribute additional XP rewards
+            Dictionary<SkillObject, int> rewardFromRequiredSkill = XpRewardFromRequiredSkills(companion, originalReward, shouldHaveAll, shouldHaveOneOfThem, issueDuration);
+            Dictionary<SkillObject, int> rewardFromLeadingTroops = XpRewardFromLeadingTroops(menLeaded, issueDuration);
+            foreach (Dictionary<SkillObject, int> reward in new object [] {  rewardFromRequiredSkill, rewardFromLeadingTroops })
             {
-                foreach (var skillReward in reward1)
+                if (reward.Count > 0)
                 {
-                    companion.AddSkillXp(skillReward.Key, AdjustXpReward(originalReward, skillReward.Key, skillReward.Value));
-                }
-            }
-
-            // Additional XP reward from leading troops
-            Dictionary<SkillObject, int> reward2 = XpRewardFromLeadingTroops(menLeaded, issueDuration);
-            if (reward2 is not null)
-            {
-                foreach (var skillReward in reward2)
-                {
-                    companion.AddSkillXp(skillReward.Key, AdjustXpReward(originalReward, skillReward.Key, skillReward.Value));
+                    foreach (var skillReward in reward)
+                    {
+                        int xp = AdjustXpReward(skillReward.Key, skillReward.Value);
+                        companion.AddSkillXp(skillReward.Key, xp);
+                        SubModule.Instance.Log.LogInformation($"Rewarded {xp} {skillReward.Key.Name} XP.");
+                    }
                 }
             }
         }
@@ -76,18 +75,19 @@ namespace DeservingCompanions.Patches
         // Sometimes shouldHaveAll and shouldHaveOneOfThem dicts are used as out parameters
         // Sometimes only shouldHaveAll or shouldHaveOneOfThem is returned
         // Sometimes another method is used or values are hardcoded somewhere in the code...
-        static void GetCompanionRequiredSkills(IssueBase issue, out Dictionary<SkillObject, int> shouldHaveAll, out Dictionary<SkillObject, int> shouldHaveOneOfThem)
+        private static void GetCompanionRequiredSkills(IssueBase issue, out Dictionary<SkillObject, int> shouldHaveAll, out Dictionary<SkillObject, int> shouldHaveOneOfThem)
         {
             string issueType = issue.GetType().Name.ToString();
+
             shouldHaveAll = new Dictionary<SkillObject, int>();
             shouldHaveOneOfThem = new Dictionary<SkillObject, int>();
 
             switch (issueType)
             {
-                case "CapturedByBountyHunterIssue":
+                case "CapturedByBountyHuntersIssue":
                 case "CaravanAmbushIssue":
-                case "ExtertionByDesertersIssue":
-                case "LandLordTrainingForRetainersIssue":
+                case "ExtortionByDesertersIssue":
+                case "LandlordTrainingForRetainersIssue":
                 case "NearbyBanditBaseIssue":
                     // GetAlternativeSolutionRequiredCompanionSkills() uses shouldHaveAll and shouldHaveOneOfThem as out parameters
                     {
@@ -98,7 +98,7 @@ namespace DeservingCompanions.Patches
                         shouldHaveOneOfThem = (Dictionary<SkillObject, int>)parameters[1];
                         break;
                     }
-                case "ArtisanCantSellProductsAtFairPriceIssue":
+                case "ArtisanCantSellProductsAtAFairPriceIssue":
                 case "ArtisanOverpricedGoodsIssue":
                 case "EscortMerchantCaravanIssue":
                 case "GangLeaderNeedsWeaponsIssue":
@@ -107,6 +107,10 @@ namespace DeservingCompanions.Patches
                 case "LordNeedsGarrisonTroopsIssue":
                 case "LordNeedsHorsesIssue":
                 case "VillageNeedsToolsIssue":
+                case "RuralNotableInnAndOutIssue":
+                case "FamilyFeudIssue":
+                case "NotableWantsDaughterFoundIssue":
+                case "TheSpyPartyIssue":
                     // GetAlternativeSolutionRequiredCompanionSkills() returns shouldHaveAll
                     {
                         MethodInfo GetRequiredSkills = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -115,13 +119,14 @@ namespace DeservingCompanions.Patches
                     }
                 case "LandLordNeedsManualLaborersIssue":
                 case "MerchantNeedsHelpWithOutlawsIssue":
+                case "RivalGangMovingInIssue":
                     // GetAlternativeSolutionRequiredCompanionSkills() returns shouldHaveOneOfThem
                     {
                         MethodInfo GetRequiredSkills = issue.GetType().GetMethod("GetAlternativeSolutionRequiredCompanionSkills", BindingFlags.Instance | BindingFlags.NonPublic);
                         shouldHaveOneOfThem = (Dictionary<SkillObject, int>)GetRequiredSkills.Invoke(issue, null);
                         break;
                     }
-                case "GandLeaderNeedsRecruitIssue":
+                case "GandLeaderNeedsRecruitsIssue":
                     // CompanionSkillRequirement returns shouldHaveOneOfThem
                     {
                         MethodInfo GetRequiredSkills = issue.GetType().GetMethod("get_CompanionSkillRequirement", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -136,7 +141,7 @@ namespace DeservingCompanions.Patches
                         shouldHaveAll.Add(DefaultSkills.Trade, requiredSkillLevel);
                         break;
                     }
-                case "MerchantArmyOfPoacherIssue":
+                case "MerchantArmyOfPoachersIssue":
                     // GetAlternativeSolutionRequiredCompanionSkills() returns shouldHaveAll
                     // GetAlternativeSolutionCompanionSkills() returns shouldHaveOneOfThem
                     {
@@ -155,33 +160,33 @@ namespace DeservingCompanions.Patches
                     }
                 default:
                     // No requirement or unknown issue
+                    SubModule.Instance.Log.LogInformation($"Issue {issueType} not supported.");
                     break;
             }
         }
 
-        static int AdjustXpReward(ValueTuple<SkillObject, int> originalReward, SkillObject skill, int xp)
+        private static int AdjustXpReward(SkillObject skill, int xp)
         {
-            // If the rewarded skill has already been rewarded in the Vanilla reward, adjust the new amount
-            if (originalReward.Item1 == skill)
-            {
-                xp = Math.Max(0, xp - originalReward.Item2);
-            }
-
             // Randomize XP amount
             float xpF = (float)xp;
             xpF = (xpF * MBRandom.RandomFloatRanged(0.75f, 1.25f));
 
             // Apply adjusting factor from settings
-            xpF = xpF * Settings.Instance.XpGainsFactor;
+            xpF = xpF * Settings.Instance?.XpGainsFactor ?? 1f;
 
             return (int)Math.Round(xpF);
         }
 
-        static Dictionary<SkillObject, int> XpRewardFromLeadingTroops(int menLeaded, int issueDuration)
+        private static Dictionary<SkillObject, int> XpRewardFromLeadingTroops(int menLeaded, int issueDuration)
         {
             float menLeadedF = (float)menLeaded;
             float issueDurationF = (float)issueDuration;
-            Dictionary<SkillObject, int> reward = new Dictionary<SkillObject, int>();
+            var reward = new Dictionary<SkillObject, int>();
+
+            if (menLeaded <= 0 || issueDuration <= 0)
+            {
+                return reward;
+            }
 
             if (MBRandom.RandomFloatRanged(0, 1) < Settings.Instance.LeadershipProba)
             {
@@ -211,20 +216,22 @@ namespace DeservingCompanions.Patches
             return reward;
         }
 
-        static Dictionary<SkillObject, int> XpRewardFromRequiredSkills(Hero companion, ValueTuple<SkillObject, int> originalReward, Dictionary<SkillObject, int> shouldHaveAll, Dictionary<SkillObject, int> shouldHaveOneOfThem, int issueDuration)
+        private static Dictionary<SkillObject, int> XpRewardFromRequiredSkills(Hero companion, ValueTuple<SkillObject, int> originalReward, Dictionary<SkillObject, int> shouldHaveAll, Dictionary<SkillObject, int> shouldHaveOneOfThem, int issueDuration)
         {
-            Dictionary<SkillObject, int> reward = new Dictionary<SkillObject, int>();
+            var reward = new Dictionary<SkillObject, int>();
 
-            if (!shouldHaveAll.IsEmpty<KeyValuePair<SkillObject, int>>())
+            if (shouldHaveAll.Count > 0)
             {
+                // In shouldHaveAll, reward each skill
                 foreach (KeyValuePair<SkillObject, int> requiredSkill in shouldHaveAll)
                 {
                     reward.Add(requiredSkill.Key, (int)Math.Round((float)originalReward.Item2 * (float)issueDuration * 2f));
                 }
             }
 
-            if (!shouldHaveOneOfThem.IsEmpty<KeyValuePair<SkillObject, int>>())
+            if (shouldHaveOneOfThem.Count > 0)
             {
+                // In shouldHaveOneOfThem, reward the skill for which the hero has the highest value
                 int heroSkillValue = 0;
                 SkillObject skillToReward = shouldHaveOneOfThem.GetRandomElementInefficiently().Key;
                 foreach (KeyValuePair<SkillObject, int> requiredSkill in shouldHaveOneOfThem)
@@ -239,6 +246,7 @@ namespace DeservingCompanions.Patches
                 }
                 reward.Add(skillToReward, (int)Math.Round((float)originalReward.Item2 * (float)issueDuration * 2f));
             }
+
             return reward;
         }
     }

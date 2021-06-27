@@ -21,20 +21,20 @@ namespace DeservingCompanions.Patches
     {
         static void Prefix(CharacterObject character, ref TextObject explanation, ref Dictionary<SkillObject, int> shouldHaveAll, ref Dictionary<SkillObject, int> shouldHaveOneOfThem)
         {
-            if (shouldHaveAll is not null)
+            foreach (var requirements in new List<Dictionary<SkillObject, int>> { shouldHaveAll, shouldHaveOneOfThem })
             {
-                List<SkillObject> skills = new List<SkillObject>(shouldHaveAll.Keys);
-                foreach (SkillObject skill in skills)
+                if (requirements is null)
                 {
-                    shouldHaveAll[skill] = (int)Math.Round(shouldHaveAll[skill] * Settings.Instance.SkillRequirementsFactor);
+                    break;
                 }
-            }
-            if (shouldHaveOneOfThem is not null)
-            {
-                List<SkillObject> skills = new List<SkillObject>(shouldHaveOneOfThem.Keys);
-                foreach (SkillObject skill in skills)
+
+                if (requirements.Count > 0)
                 {
-                    shouldHaveOneOfThem[skill] = (int)Math.Round(shouldHaveOneOfThem[skill] * Settings.Instance.SkillRequirementsFactor);
+                    var skills = new List<SkillObject>(requirements.Keys);
+                    foreach (SkillObject skill in skills)
+                    {
+                        requirements[skill] = (int)Math.Round(requirements[skill] * Settings.Instance?.SkillRequirementsFactor ?? 1f);
+                    }
                 }
             }
         }
