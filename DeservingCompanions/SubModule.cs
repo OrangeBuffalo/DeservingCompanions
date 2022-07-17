@@ -11,18 +11,13 @@ namespace DeservingCompanions
 {
     public class SubModule : MBSubModuleBase
     {
-        public static readonly string Version = "v1.2.3";
+        public static readonly string Version = "v1.3.0";
         public static readonly string Name = "DeservingCompanions";
         public static readonly string DisplayName = "Deserving Companions";
 
         public static SubModule Instance { get; private set; }
 
         public ILogger Log { get; set; }
-
-        public SubModule()
-        {
-            Instance = this;
-        }
 
         protected override void OnSubModuleLoad()
         {
