@@ -12,7 +12,7 @@ namespace DeservingCompanions.Patches
     [HarmonyPatch(typeof(DefaultIssueModel), "GetIssueAlternativeSolutionSkill")]
     class GetIssueAlternativeSolutionSkillPatch
     {
-        static void Postfix(ValueTuple<SkillObject, int> __result, Hero hero, IssueBase issue)
+        static void Postfix(ref ValueTuple<SkillObject, int> __result, Hero hero, IssueBase issue)
         {
             var original = issue.GetAlternativeSolutionRequiredCompanionSkill();
             var custom = new List<ValueTuple<SkillObject, int>> {};
